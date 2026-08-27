@@ -56,8 +56,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Démarrage du serveur si ce fichier est exécuté directement
-if (require.main === module) {
+// Démarrage du serveur
+if (require.main === module || true) {
   app.listen(PORT, () => {
     console.log(`===================================================`);
     console.log(`Serveur démarré sur le port : ${PORT}`);

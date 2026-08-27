@@ -1,21 +1,25 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  ScrollView, 
-  TouchableOpacity, 
+import React, { useState, useEffect, useContext } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
-  Alert
-} from 'react-native';
-import { AuthContext } from '../../context/AuthContext';
-import { api } from '../../services/api';
-import { colors } from '../../theme/colors';
+  Alert,
+} from "react-native";
+import { AuthContext } from "../../context/AuthContext";
+import { api } from "../../services/api";
+import { colors } from "../../theme/colors";
 
 export default function AdminDashboard({ navigation, route }) {
   const { user, logout } = useContext(AuthContext);
-  const [stats, setStats] = useState({ totalUsers: 0, activeProjects: 0, systemStatus: 'Inconnu' });
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeProjects: 0,
+    systemStatus: "Inconnu",
+  });
   const [loading, setLoading] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
 
@@ -27,10 +31,16 @@ export default function AdminDashboard({ navigation, route }) {
     setLoading(true);
     try {
       const res = await api.getAdminPage();
-      setStats(res.data?.stats || { totalUsers: 42, activeProjects: 5, systemStatus: 'En ligne' });
+      setStats(
+        res.data?.stats || {
+          totalUsers: 42,
+          activeProjects: 5,
+          systemStatus: "En ligne",
+        },
+      );
     } catch (error) {
       console.error(error);
-      Alert.alert('Erreur', 'Impossible de récupérer les statistiques admin.');
+      Alert.alert("Erreur", "Impossible de récupérer les statistiques admin.");
     } finally {
       setLoading(false);
     }
@@ -46,66 +56,101 @@ export default function AdminDashboard({ navigation, route }) {
             Administrateur : {user?.fullName || user?.email}
           </Text>
         </View>
-        
-        {route?.name === 'Home' && (
-          <TouchableOpacity 
+
+        {route?.name === "Home" && (
+          <TouchableOpacity
             style={styles.profileBtn}
             onPress={() => setMenuVisible(!menuVisible)}
           >
             <Text style={styles.profileBtnText}>Menu ☰</Text>
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity
+          style={[styles.profileBtn, { backgroundColor: "#e74c3c" }]}
+          onPress={async () => {
+            await logout();
+          }}
+        >
+          <Text style={[styles.profileBtnText, { color: "#fff" }]}>
+            Déconnexion
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Dropdown Menu */}
       {menuVisible && (
         <View style={styles.dropdownMenu}>
-          <TouchableOpacity 
-            style={styles.dropdownItem} 
+          <TouchableOpacity
+            style={styles.dropdownItem}
             onPress={() => {
               setMenuVisible(false);
-              navigation.navigate('Profile');
+              navigation.navigate("Profile");
             }}
           >
             <Text style={styles.dropdownItemText}>👤 Mon Profil</Text>
           </TouchableOpacity>
-          
+
           <View style={styles.dropdownDivider} />
-          
-          <TouchableOpacity 
-            style={styles.dropdownItem} 
+
+          <TouchableOpacity
+            style={styles.dropdownItem}
             onPress={() => {
               setMenuVisible(false);
-              navigation.navigate('Profile');
+              navigation.navigate("Profile");
             }}
           >
             <Text style={styles.dropdownItemText}>⚙️ Paramètres</Text>
           </TouchableOpacity>
-          
+
           <View style={styles.dropdownDivider} />
-          
-          <TouchableOpacity 
-            style={styles.dropdownItem} 
+
+          <TouchableOpacity
+            style={styles.dropdownItem}
             onPress={() => {
               setMenuVisible(false);
               logout();
             }}
           >
-            <Text style={[styles.dropdownItemText, { color: colors.danger }]}>🚪 Déconnexion</Text>
+            <Text style={[styles.dropdownItemText, { color: colors.danger }]}>
+              🚪 Déconnexion
+            </Text>
           </TouchableOpacity>
         </View>
       )}
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-
         {loading ? (
-          <ActivityIndicator color={colors.roles.admin} style={{ marginTop: 40 }} />
+          <ActivityIndicator
+            color={colors.roles.admin}
+            style={{ marginTop: 40 }}
+          />
         ) : (
           <>
             {/* System Status Card */}
-            <View style={[styles.statusCard, { borderColor: stats.systemStatus === 'En ligne' ? colors.success : colors.danger }]}>
+            <View
+              style={[
+                styles.statusCard,
+                {
+                  borderColor:
+                    stats.systemStatus === "En ligne"
+                      ? colors.success
+                      : colors.danger,
+                },
+              ]}
+            >
               <Text style={styles.cardHeader}>État du Système</Text>
-              <Text style={[styles.statusVal, { color: stats.systemStatus === 'En ligne' ? colors.success : colors.danger }]}>
+              <Text
+                style={[
+                  styles.statusVal,
+                  {
+                    color:
+                      stats.systemStatus === "En ligne"
+                        ? colors.success
+                        : colors.danger,
+                  },
+                ]}
+              >
                 ● {stats.systemStatus.toUpperCase()}
               </Text>
             </View>
@@ -124,38 +169,45 @@ export default function AdminDashboard({ navigation, route }) {
             </View>
 
             {/* Quick Actions / Simulations */}
-            <Text style={styles.sectionTitle}>Raccourcis de contrôle (RBAC)</Text>
-            
-            <TouchableOpacity 
-              style={styles.controlBtn} 
-              onPress={() => navigation.navigate('PromoterDashboard')}
+            <Text style={styles.sectionTitle}>
+              Raccourcis de contrôle (RBAC)
+            </Text>
+
+            <TouchableOpacity
+              style={styles.controlBtn}
+              onPress={() => navigation.navigate("PromoterDashboard")}
             >
-              <Text style={styles.controlBtnText}>Accéder à l'Espace Promoteur</Text>
+              <Text style={styles.controlBtnText}>
+                Accéder à l'Espace Promoteur
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.controlBtn} 
-              onPress={() => navigation.navigate('EngineerDashboard')}
+            <TouchableOpacity
+              style={styles.controlBtn}
+              onPress={() => navigation.navigate("EngineerDashboard")}
             >
-              <Text style={styles.controlBtnText}>Accéder au Suivi Technique (Ingénieur)</Text>
+              <Text style={styles.controlBtnText}>
+                Accéder au Suivi Technique (Ingénieur)
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.controlBtn} 
-              onPress={() => navigation.navigate('CommercialDashboard')}
+            <TouchableOpacity
+              style={styles.controlBtn}
+              onPress={() => navigation.navigate("CommercialDashboard")}
             >
-              <Text style={styles.controlBtnText}>Accéder au Catalogue (Commercial)</Text>
+              <Text style={styles.controlBtnText}>
+                Accéder au Catalogue (Commercial)
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.controlBtn} 
-              onPress={() => navigation.navigate('ClientDashboard')}
+            <TouchableOpacity
+              style={styles.controlBtn}
+              onPress={() => navigation.navigate("ClientDashboard")}
             >
               <Text style={styles.controlBtnText}>Accéder à la vue Client</Text>
             </TouchableOpacity>
           </>
         )}
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -171,9 +223,9 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 16,
@@ -182,7 +234,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   dropdownMenu: {
-    position: 'absolute',
+    position: "absolute",
     top: 75,
     right: 20,
     backgroundColor: colors.card,
@@ -192,7 +244,7 @@ const styles = StyleSheet.create({
     width: 170,
     zIndex: 1000,
     elevation: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 5,
@@ -204,7 +256,7 @@ const styles = StyleSheet.create({
   dropdownItemText: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   dropdownDivider: {
     height: 1,
@@ -212,7 +264,7 @@ const styles = StyleSheet.create({
   },
   welcome: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.roles.admin,
   },
   roleTitle: {
@@ -230,7 +282,7 @@ const styles = StyleSheet.create({
   },
   profileBtnText: {
     color: colors.text,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 14,
   },
   statusCard: {
@@ -242,32 +294,32 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     marginBottom: 6,
   },
   statusVal: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 30,
   },
   statBox: {
-    width: '48%',
+    width: "48%",
     backgroundColor: colors.card,
     borderRadius: 12,
     padding: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
+    alignItems: "center",
   },
   statNum: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   statLabel: {
@@ -277,7 +329,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     marginBottom: 16,
   },
@@ -292,7 +344,7 @@ const styles = StyleSheet.create({
   controlBtnText: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
 });

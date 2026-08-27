@@ -9,6 +9,7 @@ router.use(requireAuth);
 // Routes des Projets
 router.get('/', projectController.getProjects);
 router.post('/', requireRoles(['promoteur', 'admin']), projectController.createProject);
+router.get('/:id', projectController.getProjectDetail);
 
 // Routes des Lots
 router.get('/lots/all', projectController.getAllLots);

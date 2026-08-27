@@ -8,15 +8,19 @@ import { Platform } from 'react-native';
  * - Sur appareil physique: Remplacer par l'adresse IP locale de votre ordinateur (ex: http://192.168.1.X:5000)
  */
 export let API_BASE_URL = Platform.select({
-  ios: 'http://192.168.11.173:5000/api',
-  android: 'http://192.168.11.173:5000/api',
-  default: 'http://192.168.11.173:5000/api',
+  ios: 'http://192.168.1.5:5000/api',
+  android: 'http://192.168.1.5:5000/api',
+  default: 'http://192.168.1.5:5000/api',
 });
 
 // Charger l'URL configurée au démarrage de l'application
 AsyncStorage.getItem('api_base_url').then(savedUrl => {
   if (savedUrl) {
-    API_BASE_URL = savedUrl;
+    if (savedUrl.includes('192.168.') || savedUrl.includes('10.0.2.2') || savedUrl.includes('localhost')) {
+      AsyncStorage.removeItem('api_base_url');
+    } else {
+      API_BASE_URL = savedUrl;
+    }
   }
 });
 
@@ -84,6 +88,37 @@ const patchRequest = async (endpoint, body) => {
   return data;
 };
 
+// Requête générique PUT
+const putRequest = async (endpoint, body) => {
+  const headers = await getHeaders();
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(body),
+  });
+  
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Une erreur est survenue.');
+  }
+  return data;
+};
+
+// Requête générique DELETE
+const deleteRequest = async (endpoint) => {
+  const headers = await getHeaders();
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: 'DELETE',
+    headers,
+  });
+  
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Une erreur est survenue.');
+  }
+  return data;
+};
+
 // Services d'API Exportés
 export const api = {
   // Authentification
@@ -95,6 +130,10 @@ export const api = {
   getTasks: () => getRequest('/tasks'),
   createTask: (taskData) => postRequest('/tasks', taskData),
   updateTaskStatus: (taskId, status) => patchRequest(`/tasks/${taskId}/status`, { status }),
+  createHierarchicalTask: (taskData) => postRequest('/tasks', taskData),
+  updateHierarchicalTask: (taskId, taskData) => putRequest(`/tasks/${taskId}`, taskData),
+  deleteHierarchicalTask: (taskId) => deleteRequest(`/tasks/${taskId}`),
+  getProjectDetail: (projectId) => getRequest(`/projects/${projectId}`),
   
   // Projets & Lots
   getProjects: () => getRequest('/projects'),

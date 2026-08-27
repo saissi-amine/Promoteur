@@ -1,34 +1,54 @@
-import { colors } from '../../theme/colors';
-import React, { useState, useEffect, useContext } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  TextInput, 
-  TouchableOpacity, 
-  ScrollView, 
-  ActivityIndicator, 
+import { colors } from "../../theme/colors";
+import React, { useState, useEffect, useContext } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
   SafeAreaView,
-  Alert
-} from 'react-native';
-import { AuthContext } from '../../context/AuthContext';
-import { api } from '../../services/api';
+  Alert,
+} from "react-native";
+import { AuthContext } from "../../context/AuthContext";
+import { api } from "../../services/api";
 
 // Utilisateurs fictifs pour le sélecteur d'affectation
 const MOCK_PROFILES = [
-  { id: 'eng1', full_name: 'Jean Dupont', email: 'jean.dupont@chantier.com', role: 'ingenieur' },
-  { id: 'eng2', full_name: 'Michel Tremblay', email: 'michel.t@chantier.com', role: 'ingenieur' },
-  { id: 'comm1', full_name: 'Amine Bennani', email: 'amine.bennani@immo.ma', role: 'commercial' },
-  { id: 'comm2', full_name: 'Houda Lahlou', email: 'houda.l@immo.ma', role: 'commercial' }
+  {
+    id: "eng1",
+    full_name: "Jean Dupont",
+    email: "jean.dupont@chantier.com",
+    role: "ingenieur",
+  },
+  {
+    id: "eng2",
+    full_name: "Michel Tremblay",
+    email: "michel.t@chantier.com",
+    role: "ingenieur",
+  },
+  {
+    id: "comm1",
+    full_name: "Amine Bennani",
+    email: "amine.bennani@immo.ma",
+    role: "commercial",
+  },
+  {
+    id: "comm2",
+    full_name: "Houda Lahlou",
+    email: "houda.l@immo.ma",
+    role: "commercial",
+  },
 ];
 
 export default function PromoterDashboard({ navigation, route }) {
-  const { user } = useContext(AuthContext);
-  
+  const { user, logout } = useContext(AuthContext);
+
   // États de l'interface
-  const [activeTab, setActiveTab] = useState('macro'); // 'macro', 'rbac', 'tasks'
+  const [activeTab, setActiveTab] = useState("macro"); // 'macro', 'rbac', 'tasks'
   const [loading, setLoading] = useState(true);
-  
+
   // Données de l'API
   const [engineers, setEngineers] = useState([]);
   const [treasury, setTreasury] = useState(null);
@@ -37,14 +57,16 @@ export default function PromoterDashboard({ navigation, route }) {
   const [projects, setProjects] = useState([]);
 
   // États d'affectation de projet (RBAC)
-  const [selectedProjectId, setSelectedProjectId] = useState('');
-  const [selectedProfileId, setSelectedProfileId] = useState(MOCK_PROFILES[0].id);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [selectedProfileId, setSelectedProfileId] = useState(
+    MOCK_PROFILES[0].id,
+  );
   const [assigning, setAssigning] = useState(false);
 
   // États du formulaire de création de tâche (conservé et amélioré)
-  const [taskTitle, setTaskTitle] = useState('');
-  const [taskDesc, setTaskDesc] = useState('');
-  const [selectedEngineerId, setSelectedEngineerId] = useState('');
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDesc, setTaskDesc] = useState("");
+  const [selectedEngineerId, setSelectedEngineerId] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -73,10 +95,15 @@ export default function PromoterDashboard({ navigation, route }) {
       if (pageRes.engineers && pageRes.engineers.length > 0) {
         setSelectedEngineerId(pageRes.engineers[0].id);
       }
-
     } catch (err) {
-      console.error("Erreur de récupération des données promoteur:", err.message);
-      Alert.alert('Erreur', 'Impossible de connecter le tableau de bord de trésorerie.');
+      console.error(
+        "Erreur de récupération des données promoteur:",
+        err.message,
+      );
+      Alert.alert(
+        "Erreur",
+        "Impossible de connecter le tableau de bord de trésorerie.",
+      );
     } finally {
       setLoading(false);
     }
@@ -85,40 +112,54 @@ export default function PromoterDashboard({ navigation, route }) {
   // Action : Relancer un client pour retard de paiement (Dunning)
   const handleDunningReminder = (payment) => {
     Alert.alert(
-      'Relance Client',
+      "Relance Client",
       `Confirmez-vous l'envoi d'une notification de relance urgente à ${payment.client?.full_name || payment.client?.email} ?\n\nMontant en retard : ${Number(payment.amount).toLocaleString()} DH`,
       [
         {
-          text: 'Envoyer la relance',
+          text: "Envoyer la relance",
           onPress: () => {
-            Alert.alert('Relance envoyée', 'Un email de mise en demeure et un SMS de rappel ont été transmis au client.');
-          }
+            Alert.alert(
+              "Relance envoyée",
+              "Un email de mise en demeure et un SMS de rappel ont été transmis au client.",
+            );
+          },
         },
-        { text: 'Annuler', style: 'cancel' }
-      ]
+        { text: "Annuler", style: "cancel" },
+      ],
     );
   };
 
   // Action : Assigner un collaborateur à un projet (RBAC)
   const handleAssignProject = async () => {
     if (!selectedProjectId || !selectedProfileId) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un projet et un collaborateur.');
+      Alert.alert(
+        "Erreur",
+        "Veuillez sélectionner un projet et un collaborateur.",
+      );
       return;
     }
-    
+
     setAssigning(true);
     try {
-      const selectedProfile = MOCK_PROFILES.find(p => p.id === selectedProfileId);
-      
+      const selectedProfile = MOCK_PROFILES.find(
+        (p) => p.id === selectedProfileId,
+      );
+
       await api.assignProject(
         selectedProjectId,
         selectedProfileId,
-        selectedProfile ? selectedProfile.role : 'ingenieur'
+        selectedProfile ? selectedProfile.role : "ingenieur",
       );
-      
-      Alert.alert('Succès', 'Le collaborateur a été affecté à ce projet immobilier.');
+
+      Alert.alert(
+        "Succès",
+        "Le collaborateur a été affecté à ce projet immobilier.",
+      );
     } catch (err) {
-      Alert.alert('Erreur affectation', err.message || 'Déjà affecté à ce projet.');
+      Alert.alert(
+        "Erreur affectation",
+        err.message || "Déjà affecté à ce projet.",
+      );
     } finally {
       setAssigning(false);
     }
@@ -127,7 +168,7 @@ export default function PromoterDashboard({ navigation, route }) {
   // Action : Assigner une tâche à un ingénieur
   const handleCreateTask = async () => {
     if (!taskTitle) {
-      Alert.alert('Erreur', 'Le titre de la tâche est obligatoire.');
+      Alert.alert("Erreur", "Le titre de la tâche est obligatoire.");
       return;
     }
 
@@ -137,14 +178,14 @@ export default function PromoterDashboard({ navigation, route }) {
         title: taskTitle,
         description: taskDesc,
         assigned_to: selectedEngineerId || null,
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       });
 
-      Alert.alert('Succès', 'La tâche chantier a été créée et affectée.');
-      setTaskTitle('');
-      setTaskDesc('');
+      Alert.alert("Succès", "La tâche chantier a été créée et affectée.");
+      setTaskTitle("");
+      setTaskDesc("");
     } catch (error) {
-      Alert.alert('Erreur', error.message || 'Impossible de créer la tâche.');
+      Alert.alert("Erreur", error.message || "Impossible de créer la tâche.");
     } finally {
       setSubmitting(false);
     }
@@ -154,7 +195,9 @@ export default function PromoterDashboard({ navigation, route }) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.roles.promoteur} />
-        <Text style={styles.loadingText}>Chargement du tableau de bord macro...</Text>
+        <Text style={styles.loadingText}>
+          Chargement du tableau de bord macro...
+        </Text>
       </SafeAreaView>
     );
   }
@@ -165,80 +208,155 @@ export default function PromoterDashboard({ navigation, route }) {
       <View style={styles.header}>
         <View>
           <Text style={styles.welcome}>Macro Dashboard</Text>
-          <Text style={styles.roleTitle}>Promoteur : {user?.fullName || user?.email}</Text>
+          <Text style={styles.roleTitle}>
+            Promoteur : {user?.fullName || user?.email}
+          </Text>
         </View>
-        
-        {route?.name === 'Home' && (
-          <TouchableOpacity 
+
+        {route?.name === "Home" && (
+          <TouchableOpacity
             style={styles.profileBtn}
-            onPress={() => navigation.navigate('Profile')}
+            onPress={() => navigation.navigate("Profile")}
           >
             <Text style={styles.profileBtnText}>Profil</Text>
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity
+          style={[
+            styles.profileBtn,
+            { backgroundColor: colors.error || "#e74c3c" },
+          ]}
+          onPress={async () => {
+            await logout();
+          }}
+        >
+          <Text style={[styles.profileBtnText, { color: "#fff" }]}>
+            Déconnexion
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Tabs */}
       <View style={styles.tabRow}>
-        <TouchableOpacity 
-          style={[styles.tabButton, activeTab === 'macro' && styles.tabButtonActive]}
-          onPress={() => setActiveTab('macro')}
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === "macro" && styles.tabButtonActive,
+          ]}
+          onPress={() => setActiveTab("macro")}
         >
-          <Text style={[styles.tabButtonText, activeTab === 'macro' && styles.tabButtonTextActive]}>Trésorerie & Ventes</Text>
+          <Text
+            style={[
+              styles.tabButtonText,
+              activeTab === "macro" && styles.tabButtonTextActive,
+            ]}
+          >
+            Trésorerie & Ventes
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tabButton, activeTab === 'rbac' && styles.tabButtonActive]}
-          onPress={() => setActiveTab('rbac')}
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === "rbac" && styles.tabButtonActive,
+          ]}
+          onPress={() => setActiveTab("rbac")}
         >
-          <Text style={[styles.tabButtonText, activeTab === 'rbac' && styles.tabButtonTextActive]}>RBAC Affectations</Text>
+          <Text
+            style={[
+              styles.tabButtonText,
+              activeTab === "rbac" && styles.tabButtonTextActive,
+            ]}
+          >
+            RBAC Affectations
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tabButton, activeTab === 'tasks' && styles.tabButtonActive]}
-          onPress={() => setActiveTab('tasks')}
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === "tasks" && styles.tabButtonActive,
+          ]}
+          onPress={() => setActiveTab("tasks")}
         >
-          <Text style={[styles.tabButtonText, activeTab === 'tasks' && styles.tabButtonTextActive]}>Assigner Tâche</Text>
+          <Text
+            style={[
+              styles.tabButtonText,
+              activeTab === "tasks" && styles.tabButtonTextActive,
+            ]}
+          >
+            Assigner Tâche
+          </Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {activeTab === 'macro' ? (
+        {activeTab === "macro" ? (
           /* TAB 1: MACRO DASHBOARD & TREASURY */
           <View>
             {/* STATS GENERALES */}
-            <Text style={styles.sectionHeader}>Situation Financière Globale</Text>
+            <Text style={styles.sectionHeader}>
+              Situation Financière Globale
+            </Text>
             {treasury && (
               <View style={styles.treasuryMetricsRow}>
                 <View style={styles.treasuryCard}>
-                  <Text style={styles.metricVal}>{Number(treasury.totalCollected).toLocaleString()} DH</Text>
+                  <Text style={styles.metricVal}>
+                    {Number(treasury.totalCollected).toLocaleString()} DH
+                  </Text>
                   <Text style={styles.metricLabel}>Encaissé (Paid)</Text>
-                  <View style={[styles.miniBar, { backgroundColor: colors.success, width: '70%' }]} />
+                  <View
+                    style={[
+                      styles.miniBar,
+                      { backgroundColor: colors.success, width: "70%" },
+                    ]}
+                  />
                 </View>
                 <View style={styles.treasuryCard}>
-                  <Text style={[styles.metricVal, { color: colors.danger }]}>{Number(treasury.totalOverdue).toLocaleString()} DH</Text>
+                  <Text style={[styles.metricVal, { color: colors.danger }]}>
+                    {Number(treasury.totalOverdue).toLocaleString()} DH
+                  </Text>
                   <Text style={styles.metricLabel}>Retards (Overdue)</Text>
-                  <View style={[styles.miniBar, { backgroundColor: colors.danger, width: '25%' }]} />
+                  <View
+                    style={[
+                      styles.miniBar,
+                      { backgroundColor: colors.danger, width: "25%" },
+                    ]}
+                  />
                 </View>
               </View>
             )}
 
             {/* PREVISIONS CASH-FLOW */}
             <View style={styles.sectionCard}>
-              <Text style={styles.cardHeader}>📈 Prévisions Cash-Flow (6 mois)</Text>
-              <Text style={styles.cardDescription}>Projections de recouvrement basées sur les échéances d'appels de fonds chantiers.</Text>
-              
+              <Text style={styles.cardHeader}>
+                📈 Prévisions Cash-Flow (6 mois)
+              </Text>
+              <Text style={styles.cardDescription}>
+                Projections de recouvrement basées sur les échéances d'appels de
+                fonds chantiers.
+              </Text>
+
               {forecast.length === 0 ? (
-                <Text style={styles.emptyText}>Aucune prévision de trésorerie disponible.</Text>
+                <Text style={styles.emptyText}>
+                  Aucune prévision de trésorerie disponible.
+                </Text>
               ) : (
                 forecast.map((f, idx) => (
                   <View key={idx} style={styles.forecastRow}>
                     <Text style={styles.forecastMonth}>{f.month}</Text>
                     <View style={styles.forecastBarBg}>
-                      <View style={[
-                        styles.forecastBarFill,
-                        { width: `${Math.min((f.amount / 1000000) * 100, 100)}%` }
-                      ]} />
+                      <View
+                        style={[
+                          styles.forecastBarFill,
+                          {
+                            width: `${Math.min((f.amount / 1000000) * 100, 100)}%`,
+                          },
+                        ]}
+                      />
                     </View>
-                    <Text style={styles.forecastVal}>{Number(f.amount).toLocaleString()} DH</Text>
+                    <Text style={styles.forecastVal}>
+                      {Number(f.amount).toLocaleString()} DH
+                    </Text>
                   </View>
                 ))
               )}
@@ -246,24 +364,38 @@ export default function PromoterDashboard({ navigation, route }) {
 
             {/* CARTE / SYNTHESE PROJETS */}
             <View style={styles.sectionCard}>
-              <Text style={styles.cardHeader}>🗺️ Vue d'ensemble des Chantiers</Text>
+              <Text style={styles.cardHeader}>
+                🗺️ Vue d'ensemble des Chantiers
+              </Text>
               {/* Carte GPS simulée */}
               <View style={styles.mapMock}>
-                <Text style={styles.mapMockText}>🗺️ Carte Active des Projets</Text>
-                <Text style={styles.mapMockCoord}>Axe Casa (33.57) | Axe Rabat (34.02)</Text>
+                <Text style={styles.mapMockText}>
+                  🗺️ Carte Active des Projets
+                </Text>
+                <Text style={styles.mapMockCoord}>
+                  Axe Casa (33.57) | Axe Rabat (34.02)
+                </Text>
               </View>
 
               {projectsSummary.map((pSummary) => (
                 <View key={pSummary.projectId} style={styles.projectSummaryRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.projectSummaryName}>{pSummary.projectName}</Text>
+                    <Text style={styles.projectSummaryName}>
+                      {pSummary.projectName}
+                    </Text>
                     <Text style={styles.projectSummaryDetails}>
-                      Lots : {pSummary.soldLots} vendus | {pSummary.reservedLots} réservés | {pSummary.availableLots} disponibles
+                      Lots : {pSummary.soldLots} vendus |{" "}
+                      {pSummary.reservedLots} réservés |{" "}
+                      {pSummary.availableLots} disponibles
                     </Text>
                   </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={styles.projectSummaryVal}>{Number(pSummary.salesRevenue).toLocaleString()} DH</Text>
-                    <Text style={styles.projectSummaryLbl}>Chiffre d'Affaires</Text>
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text style={styles.projectSummaryVal}>
+                      {Number(pSummary.salesRevenue).toLocaleString()} DH
+                    </Text>
+                    <Text style={styles.projectSummaryLbl}>
+                      Chiffre d'Affaires
+                    </Text>
                   </View>
                 </View>
               ))}
@@ -271,22 +403,37 @@ export default function PromoterDashboard({ navigation, route }) {
 
             {/* OVERDUE TRACKER (IMPAYES CLIENTS) */}
             <View style={styles.sectionCard}>
-              <Text style={[styles.cardHeader, { color: colors.danger }]}>⚠️ Overdue Tracker (Retards de Paiement)</Text>
-              <Text style={styles.cardDescription}>Paiements en retard. Cliquez pour relancer l'acquéreur.</Text>
-              
-              {(!treasury || treasury.overdueTracker.length === 0) ? (
-                <Text style={styles.emptyText}>Aucun retard de paiement signalé. Trésorerie saine.</Text>
+              <Text style={[styles.cardHeader, { color: colors.danger }]}>
+                ⚠️ Overdue Tracker (Retards de Paiement)
+              </Text>
+              <Text style={styles.cardDescription}>
+                Paiements en retard. Cliquez pour relancer l'acquéreur.
+              </Text>
+
+              {!treasury || treasury.overdueTracker.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  Aucun retard de paiement signalé. Trésorerie saine.
+                </Text>
               ) : (
                 treasury.overdueTracker.map((payment) => (
                   <View key={payment.id} style={styles.overdueItem}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.overdueClient}>{payment.client?.full_name || payment.client?.email}</Text>
-                      <Text style={styles.overdueLot}>Lot {payment.lot?.number} | {payment.lot?.project?.name}</Text>
-                      <Text style={styles.overdueMeta}>Échéance dépassée le {new Date(payment.due_date).toLocaleDateString('fr-FR')}</Text>
+                      <Text style={styles.overdueClient}>
+                        {payment.client?.full_name || payment.client?.email}
+                      </Text>
+                      <Text style={styles.overdueLot}>
+                        Lot {payment.lot?.number} | {payment.lot?.project?.name}
+                      </Text>
+                      <Text style={styles.overdueMeta}>
+                        Échéance dépassée le{" "}
+                        {new Date(payment.due_date).toLocaleDateString("fr-FR")}
+                      </Text>
                     </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={styles.overdueAmount}>{Number(payment.amount).toLocaleString()} DH</Text>
-                      <TouchableOpacity 
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={styles.overdueAmount}>
+                        {Number(payment.amount).toLocaleString()} DH
+                      </Text>
+                      <TouchableOpacity
                         style={styles.dunningBtn}
                         onPress={() => handleDunningReminder(payment)}
                       >
@@ -298,42 +445,74 @@ export default function PromoterDashboard({ navigation, route }) {
               )}
             </View>
           </View>
-        ) : activeTab === 'rbac' ? (
+        ) : activeTab === "rbac" ? (
           /* TAB 2: RBAC USER & PROJECT ASSIGNMENTS */
           <View style={styles.sectionCard}>
-            <Text style={styles.cardHeader}>🔑 Affectation et Rôles (RBAC)</Text>
-            <Text style={styles.cardDescription}>Attribuez des commerciaux ou ingénieurs de chantiers à des projets immobiliers spécifiques.</Text>
-            
+            <Text style={styles.cardHeader}>
+              🔑 Affectation et Rôles (RBAC)
+            </Text>
+            <Text style={styles.cardDescription}>
+              Attribuez des commerciaux ou ingénieurs de chantiers à des projets
+              immobiliers spécifiques.
+            </Text>
+
             <View style={styles.form}>
               <Text style={styles.formLabel}>1. Sélectionner le Projet :</Text>
               <View style={styles.listSelectorContainer}>
-                {projects.map(p => (
+                {projects.map((p) => (
                   <TouchableOpacity
                     key={p.id}
-                    style={[styles.projectRBACItem, selectedProjectId === p.id && styles.projectRBACItemActive]}
+                    style={[
+                      styles.projectRBACItem,
+                      selectedProjectId === p.id &&
+                        styles.projectRBACItemActive,
+                    ]}
                     onPress={() => setSelectedProjectId(p.id)}
                   >
-                    <Text style={[styles.projectRBACText, selectedProjectId === p.id && { color: colors.background }]}>{p.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.formLabel}>2. Sélectionner le Collaborateur :</Text>
-              <View style={styles.listSelectorContainer}>
-                {MOCK_PROFILES.map(prof => (
-                  <TouchableOpacity
-                    key={prof.id}
-                    style={[styles.projectRBACItem, selectedProfileId === prof.id && styles.projectRBACItemActive]}
-                    onPress={() => setSelectedProfileId(prof.id)}
-                  >
-                    <Text style={[styles.projectRBACText, selectedProfileId === prof.id && { color: colors.background }]}>
-                      {prof.full_name} ({prof.role === 'ingenieur' ? 'Ingénieur' : 'Commercial'})
+                    <Text
+                      style={[
+                        styles.projectRBACText,
+                        selectedProjectId === p.id && {
+                          color: colors.background,
+                        },
+                      ]}
+                    >
+                      {p.name}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <TouchableOpacity 
+              <Text style={styles.formLabel}>
+                2. Sélectionner le Collaborateur :
+              </Text>
+              <View style={styles.listSelectorContainer}>
+                {MOCK_PROFILES.map((prof) => (
+                  <TouchableOpacity
+                    key={prof.id}
+                    style={[
+                      styles.projectRBACItem,
+                      selectedProfileId === prof.id &&
+                        styles.projectRBACItemActive,
+                    ]}
+                    onPress={() => setSelectedProfileId(prof.id)}
+                  >
+                    <Text
+                      style={[
+                        styles.projectRBACText,
+                        selectedProfileId === prof.id && {
+                          color: colors.background,
+                        },
+                      ]}
+                    >
+                      {prof.full_name} (
+                      {prof.role === "ingenieur" ? "Ingénieur" : "Commercial"})
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity
                 style={styles.submitBtn}
                 onPress={handleAssignProject}
                 disabled={assigning}
@@ -341,7 +520,9 @@ export default function PromoterDashboard({ navigation, route }) {
                 {assigning ? (
                   <ActivityIndicator color={colors.background} />
                 ) : (
-                  <Text style={styles.submitBtnText}>Assigner au Projet chantiers</Text>
+                  <Text style={styles.submitBtnText}>
+                    Assigner au Projet chantiers
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -349,9 +530,13 @@ export default function PromoterDashboard({ navigation, route }) {
         ) : (
           /* TAB 3: ASSIGN TECHNICAL TASK (From V1) */
           <View style={styles.sectionCard}>
-            <Text style={styles.cardHeader}>🛠️ Créer une tâche technique de chantier</Text>
-            <Text style={styles.cardDescription}>Émettez des directives chantiers aux ingénieurs.</Text>
-            
+            <Text style={styles.cardHeader}>
+              🛠️ Créer une tâche technique de chantier
+            </Text>
+            <Text style={styles.cardDescription}>
+              Émettez des directives chantiers aux ingénieurs.
+            </Text>
+
             <View style={styles.form}>
               <TextInput
                 style={styles.input}
@@ -371,21 +556,33 @@ export default function PromoterDashboard({ navigation, route }) {
                 onChangeText={setTaskDesc}
               />
 
-              <Text style={styles.formLabel}>Assigner à l'Ingénieur en charge :</Text>
+              <Text style={styles.formLabel}>
+                Assigner à l'Ingénieur en charge :
+              </Text>
               <View style={styles.listSelectorContainer}>
                 {engineers.length === 0 ? (
-                  <Text style={styles.emptyText}>Aucun ingénieur affecté sur l'API.</Text>
+                  <Text style={styles.emptyText}>
+                    Aucun ingénieur affecté sur l'API.
+                  </Text>
                 ) : (
                   engineers.map((eng) => (
                     <TouchableOpacity
                       key={eng.id}
                       style={[
                         styles.projectRBACItem,
-                        selectedEngineerId === eng.id && styles.projectRBACItemActive
+                        selectedEngineerId === eng.id &&
+                          styles.projectRBACItemActive,
                       ]}
                       onPress={() => setSelectedEngineerId(eng.id)}
                     >
-                      <Text style={[styles.projectRBACText, selectedEngineerId === eng.id && { color: colors.background }]}>
+                      <Text
+                        style={[
+                          styles.projectRBACText,
+                          selectedEngineerId === eng.id && {
+                            color: colors.background,
+                          },
+                        ]}
+                      >
                         {eng.full_name || eng.email}
                       </Text>
                     </TouchableOpacity>
@@ -393,7 +590,7 @@ export default function PromoterDashboard({ navigation, route }) {
                 )}
               </View>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.submitBtn}
                 onPress={handleCreateTask}
                 disabled={submitting || engineers.length === 0}
@@ -401,7 +598,9 @@ export default function PromoterDashboard({ navigation, route }) {
                 {submitting ? (
                   <ActivityIndicator color={colors.background} />
                 ) : (
-                  <Text style={styles.submitBtnText}>Créer et Assigner la tâche</Text>
+                  <Text style={styles.submitBtnText}>
+                    Créer et Assigner la tâche
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -420,17 +619,17 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     color: colors.textMuted,
     marginTop: 12,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 16,
@@ -439,7 +638,7 @@ const styles = StyleSheet.create({
   },
   welcome: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.roles.promoteur,
   },
   roleTitle: {
@@ -457,11 +656,11 @@ const styles = StyleSheet.create({
   },
   profileBtnText: {
     color: colors.text,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 13,
   },
   tabRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: colors.card,
     padding: 6,
     borderBottomWidth: 1,
@@ -470,7 +669,7 @@ const styles = StyleSheet.create({
   tabButton: {
     flex: 1,
     paddingVertical: 10,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 6,
   },
   tabButtonActive: {
@@ -481,7 +680,7 @@ const styles = StyleSheet.create({
   tabButtonText: {
     fontSize: 13,
     color: colors.textMuted,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   tabButtonTextActive: {
     color: colors.roles.promoteur,
@@ -491,18 +690,18 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     fontSize: 13,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     marginBottom: 12,
   },
   treasuryMetricsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 18,
   },
   treasuryCard: {
-    width: '48%',
+    width: "48%",
     backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
@@ -511,7 +710,7 @@ const styles = StyleSheet.create({
   },
   metricVal: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   metricLabel: {
@@ -534,7 +733,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     marginBottom: 4,
   },
@@ -544,15 +743,15 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   forecastRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 6,
   },
   forecastMonth: {
     width: 60,
     fontSize: 12,
     color: colors.text,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   forecastBarBg: {
     flex: 1,
@@ -560,18 +759,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     borderRadius: 4,
     marginHorizontal: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   forecastBarFill: {
-    height: '100%',
+    height: "100%",
     backgroundColor: colors.roles.promoteur,
   },
   forecastVal: {
     width: 80,
     fontSize: 11,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
-    textAlign: 'right',
+    textAlign: "right",
   },
   mapMock: {
     height: 100,
@@ -579,13 +778,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
   },
   mapMockText: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   mapMockCoord: {
@@ -594,16 +793,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   projectSummaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   projectSummaryName: {
     fontSize: 13,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   projectSummaryDetails: {
@@ -613,7 +812,7 @@ const styles = StyleSheet.create({
   },
   projectSummaryVal: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.success,
   },
   projectSummaryLbl: {
@@ -622,16 +821,16 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   overdueItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   overdueClient: {
     fontSize: 13,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   overdueLot: {
@@ -646,12 +845,12 @@ const styles = StyleSheet.create({
   },
   overdueAmount: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.danger,
     marginBottom: 6,
   },
   dunningBtn: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
     borderWidth: 1,
     borderColor: colors.danger,
     borderRadius: 4,
@@ -661,21 +860,21 @@ const styles = StyleSheet.create({
   dunningBtnText: {
     fontSize: 10,
     color: colors.danger,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   form: {
     marginTop: 6,
   },
   formLabel: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.textMuted,
     marginBottom: 8,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   listSelectorContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginBottom: 16,
   },
   projectRBACItem: {
@@ -694,19 +893,19 @@ const styles = StyleSheet.create({
   },
   projectRBACText: {
     fontSize: 11,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   submitBtn: {
     backgroundColor: colors.roles.promoteur,
     borderRadius: 8,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
   },
   submitBtnText: {
     color: colors.background,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 14,
   },
   input: {
@@ -721,10 +920,10 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 70,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   emptyText: {
-    textAlign: 'center',
+    textAlign: "center",
     color: colors.textMuted,
     fontSize: 12,
     marginVertical: 20,

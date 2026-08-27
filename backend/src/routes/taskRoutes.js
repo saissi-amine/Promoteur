@@ -12,7 +12,13 @@ router.get('/', taskController.getTasks);
 // Créer une tâche (Uniquement pour Promoteur et Admin)
 router.post('/', requireRoles(['promoteur', 'admin']), taskController.createTask);
 
-// Mettre à jour le statut d'une tâche (Ingénieur assigné, Promoteur ou Admin)
+// Mettre à jour une tâche (Ingénieur, Promoteur, ou Admin)
+router.put('/:id', requireRoles(['ingenieur', 'promoteur', 'admin']), taskController.updateTask);
+
+// Supprimer une tâche (Promoteur et Admin uniquement)
+router.delete('/:id', requireRoles(['promoteur', 'admin']), taskController.deleteTask);
+
+// Mettre à jour le statut d'une tâche (anciennement conservé)
 router.patch('/:id/status', requireRoles(['ingenieur', 'promoteur', 'admin']), taskController.updateTaskStatus);
 
 module.exports = router;

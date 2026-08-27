@@ -36,3 +36,10 @@ yarn-error.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# VS Code settings
+.vscode/
+
+# Local build logs
+mobile/build_log.txt
+*.log

@@ -184,3 +184,86 @@ exports.updateLotStatus = async (req, res) => {
     res.status(500).json({ error: 'Erreur interne lors de la mise à jour du lot.' });
   }
 };
+
+/**
+ * Récupérer les détails d'un projet spécifique avec sa hiérarchie de tâches
+ */
+exports.getProjectDetail = async (req, res) => {
+  const { id } = req.params;
+  const clientToUse = supabaseAdmin || supabase;
+
+  try {
+    // 1. Fetch project header info
+    const { data: project, error: projError } = await clientToUse
+      .from('projects')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (projError || !project) {
+      return res.status(404).json({ error: 'Projet introuvable.' });
+    }
+
+    // 2. Fetch assigned engineers
+    const { data: engAssignments, error: engError } = await clientToUse
+      .from('project_engineers')
+      .select('*')
+      .eq('project_id', id);
+
+    let assignedEngineers = [];
+    if (!engError && engAssignments) {
+      // Map assignments to get engineer details (handles joins gracefully)
+      assignedEngineers = engAssignments.map(assignment => {
+        return assignment.engineer || assignment.engineers || { id: assignment.engineer_id };
+      }).filter(e => e.id);
+    }
+
+    // 3. Fetch all tasks for the project
+    const { data: tasks, error: tasksError } = await clientToUse
+      .from('tasks')
+      .select('*')
+      .eq('project_id', id)
+      .order('created_at', { ascending: true });
+
+    if (tasksError) {
+      return res.status(400).json({ error: tasksError.message });
+    }
+
+    // 4. Build task hierarchy (max 3 levels)
+    const buildTaskTree = (flatTasks) => {
+      if (!flatTasks || flatTasks.length === 0) return [];
+      
+      // Separate by levels
+      const l1 = flatTasks.filter(t => t.level === 1 || !t.parent_id);
+      const l2 = flatTasks.filter(t => t.level === 2);
+      const l3 = flatTasks.filter(t => t.level === 3);
+
+      // Nest Level 3 into Level 2
+      l2.forEach(task2 => {
+        task2.subtasks = l3.filter(task3 => task3.parent_id === task2.id);
+      });
+
+      // Nest Level 2 into Level 1
+      l1.forEach(task1 => {
+        task1.subtasks = l2.filter(task2 => task2.parent_id === task1.id);
+      });
+
+      return l1;
+    };
+
+    const taskTree = buildTaskTree(tasks);
+
+    res.status(200).json({
+      project: {
+        ...project,
+        assigned_engineers: assignedEngineers,
+        engineers_count: assignedEngineers.length
+      },
+      taskTree
+    });
+
+  } catch (err) {
+    console.error('Erreur getProjectDetail:', err.message);
+    res.status(500).json({ error: 'Erreur interne lors de la récupération des détails du projet.' });
+  }
+};

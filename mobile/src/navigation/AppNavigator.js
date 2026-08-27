@@ -23,24 +23,24 @@ import ProfileScreen from '../screens/common/ProfileScreen';
 const Stack = createStackNavigator();
 
 // Composant pour orienter dynamiquement l'utilisateur vers son tableau de bord par défaut
-function HomeWrapper() {
+function HomeWrapper({ navigation, route }) {
   const { user } = useContext(AuthContext);
   
-  if (!user) return <LoginScreen />;
+  if (!user) return <LoginScreen navigation={navigation} route={route} />;
 
   switch (user.role) {
     case 'promoteur':
-      return <PromoterDashboard />;
+      return <PromoterDashboard navigation={navigation} route={route} />;
     case 'ingenieur':
-      return <EngineerDashboard />;
+      return <EngineerDashboard navigation={navigation} route={route} />;
     case 'commercial':
-      return <CommercialDashboard />;
+      return <CommercialDashboard navigation={navigation} route={route} />;
     case 'client':
-      return <ClientDashboard />;
+      return <ClientDashboard navigation={navigation} route={route} />;
     case 'admin':
-      return <AdminDashboard />;
+      return <AdminDashboard navigation={navigation} route={route} />;
     default:
-      return <LoginScreen />;
+      return <LoginScreen navigation={navigation} route={route} />;
   }
 }
 
