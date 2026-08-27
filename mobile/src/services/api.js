@@ -8,9 +8,9 @@ import { Platform } from 'react-native';
  * - Sur appareil physique: Remplacer par l'adresse IP locale de votre ordinateur (ex: http://192.168.1.X:5000)
  */
 export let API_BASE_URL = Platform.select({
-  ios: 'http://192.168.1.5:5000/api',
-  android: 'http://192.168.1.5:5000/api',
-  default: 'http://192.168.1.5:5000/api',
+  ios: 'https://promoteur-gprs.onrender.com/api',
+  android: 'https://promoteur-gprs.onrender.com/api',
+  default: 'https://promoteur-gprs.onrender.com/api',
 });
 
 // Charger l'URL configurée au démarrage de l'application
